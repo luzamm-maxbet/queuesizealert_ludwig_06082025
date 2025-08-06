@@ -1,11 +1,9 @@
 export default async function handler(req, res) {
-  const clientId = process.env.CLIENT_ID;
-  const redirectUri = encodeURIComponent("https://YOUR-VERCEL-URL.vercel.app/api/callback");
-  const scope = encodeURIComponent("reports_read chats--all:ro agents--all:ro");
-  const state = "maxbet-queue-alert"; // Optional: can randomize for CSRF protection
+  const clientId = process.env.LIVECHAT_CLIENT_ID;
+  const redirectUri = process.env.LIVECHAT_REDIRECT_URI;
+  const scopes = 'reports_read agents--all:ro chats--all:ro';
 
-  const authUrl = `https://accounts.livechat.com/authorize?response_type=code&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}&state=${state}`;
+  const authUrl = `https://accounts.livechat.com/authorize?response_type=code&client_id=${clientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${encodeURIComponent(scopes)}`;
 
   res.redirect(authUrl);
 }
-

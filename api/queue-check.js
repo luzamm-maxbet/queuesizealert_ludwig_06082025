@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://api.livechatinc.com/v3.4/configuration/action/whoami', {
+    const response = await fetch('https://api.livechatinc.com/v3.4/me', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`
@@ -22,7 +22,7 @@ export default async function handler(req, res) {
     }
 
     const data = await response.json();
-    console.log("👤 Whoami response:", data);
+    console.log("👤 Me response:", data);
 
     res.status(200).json(data);
   } catch (err) {

@@ -34,12 +34,13 @@ export default async function handler(req, res) {
     const accessToken = tokenData.access_token;
 
     // Step 2: Try calling the Reports API
-    const reportRes = await fetch("https://api.livechatinc.com/v3.5/reports/agents", {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      }
-    });
+const reportRes = await fetch("https://api.livechat.com/reports/v3.5/agents", {
+  headers: {
+    Authorization: `Bearer ${accessToken}`,
+    "Content-Type": "application/json"
+  }
+});
+
 
     const raw = await reportRes.text();
     console.log("📄 Raw response from /reports/agents:", raw);

@@ -1,10 +1,14 @@
 {
   "name": "QueueSizeAlert",
   "version": "1.0.0",
-  "description": "Queue monitoring and alerting",
+  "description": "Alerts when queue size exceeds threshold",
   "authorization": {
     "type": "client_credentials",
-    "scopes": ["reports_read"]
+    "scopes": [
+      "reports_read",
+      "chats--all:ro",
+      "agents--all:ro"
+    ]
   },
   "building_blocks": [
     {

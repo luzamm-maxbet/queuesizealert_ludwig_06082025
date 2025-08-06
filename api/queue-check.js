@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://api.livechatinc.com/v3.4/me', {
+    const response = await fetch('https://api.livechatinc.com/v3.3/agents', {
       method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`
@@ -16,17 +16,18 @@ export default async function handler(req, res) {
     });
 
     const contentType = response.headers.get("content-type") || "";
+    const text = await response.text();
+
     if (!contentType.includes("application/json")) {
-      const text = await response.text();
       throw new Error(`Non-JSON response: ${text}`);
     }
 
-    const data = await response.json();
-    console.log("👤 Me response:", data);
+    const data = JSON.parse(text);
+    console.log("✅ API Success:", data);
 
-    res.status(200).json(data);
+    return res.status(200).json(data);
   } catch (err) {
     console.error("❌ Queue check error:", err);
-    res.status(500).json({ error: 'Queue check failed', details: err.message });
+    return res.status(500).json({ error: "Queue check failed", details: err.message });
   }
 }

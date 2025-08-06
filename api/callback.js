@@ -33,41 +33,31 @@ export default async function handler(req, res) {
 
     const accessToken = tokenData.access_token;
 
-    // Step 2: Try calling the Reports API
-const reportRes = await fetch("https://api.livechat.com/reports/v3.5/agents", {
+   // Step 2: Try calling the Agents API v3.4
+const agentResponse = await fetch("https://api.livechatinc.com/v3.4/agents", {
   headers: {
     Authorization: `Bearer ${accessToken}`,
     "Content-Type": "application/json"
   }
 });
 
+const raw = await agentResponse.text();
+console.log("📄 Raw response from /agents:", raw);
 
-    const raw = await reportRes.text();
-    console.log("📄 Raw response from /reports/agents:", raw);
-
-    let data;
-    try {
-      data = JSON.parse(raw);
-    } catch (e) {
-      console.error("❌ Failed to parse JSON:", e.message);
-      return res.status(500).json({
-        error: "Callback failed",
-        details: "Could not parse API response as JSON. See logs.",
-        raw_response: raw
-      });
-    }
-
-    // Success!
-    return res.status(200).json({
-      message: "Authorization successful!",
-      access_token: accessToken,
-      api_response: data
-    });
-  } catch (error) {
-    console.error("❌ Callback error:", error);
-    return res.status(500).json({
-      error: "Callback failed",
-      details: error.message
-    });
-  }
+let data;
+try {
+  data = JSON.parse(raw);
+} catch (e) {
+  console.error("❌ Failed to parse JSON:", e.message);
+  return res.status(500).json({
+    error: "Callback failed",
+    details: "Could not parse API response as JSON. See logs.",
+    raw_response: raw
+  });
 }
+
+return res.status(200).json({
+  message: "Authorization successful!",
+  access_token: accessToken,
+  api_response: data
+});

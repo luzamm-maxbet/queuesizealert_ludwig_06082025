@@ -1,0 +1,16 @@
+{
+  "name": "QueueSizeAlert",
+  "version": "1.0.0",
+  "description": "Queue monitoring and alerting",
+  "authorization": {
+    "type": "client_credentials",
+    "scopes": ["reports_read"]
+  },
+  "building_blocks": [
+    {
+      "type": "backend",
+      "name": "queueAlertService",
+      "entry_point": "index.js"
+    }
+  ]
+}

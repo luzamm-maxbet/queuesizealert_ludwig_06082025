@@ -31,33 +31,26 @@ module.exports = async function handler(req, res) {
       return res.status(401).json({ error: "Failed to get access token" });
     }
 
-    // Step 2: Call Reports API
-    const reportResponse = await fetch("https://api.livechatinc.com/v3.5/reports/queues", {
+    // ✅ Step 2: Call Agents API (allowed under agents--all:ro scope)
+    const agentResponse = await fetch("https://api.livechatinc.com/v3.4/agents", {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${accessToken}`
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
       }
     });
 
-    const reportData = await reportResponse.json();
-    console.log("📊 Queue response:", reportData);
-
-    const waiting = reportData?.queues?.[0]?.customers_waiting ?? 0;
-
-    if (waiting >= 3) {
-      console.log(`🚨 ALERT: ${waiting} customers are waiting in the queue.`);
-    } else {
-      console.log(`✅ Only ${waiting} customers waiting. All good.`);
-    }
+    const agentData = await agentResponse.json();
+    console.log("👤 Agent data response:", agentData);
 
     return res.status(200).json({
-      waiting,
-      message: waiting >= 3 ? "Threshold exceeded" : "Queue size is OK"
+      agents: agentData,
+      message: "Fetched agent profiles successfully"
     });
   } catch (error) {
-    console.error("❌ Queue check failed:", error);
+    console.error("❌ API request failed:", error);
     return res.status(500).json({
-      error: "Queue check failed",
+      error: "Request failed",
       details: error.message
     });
   }

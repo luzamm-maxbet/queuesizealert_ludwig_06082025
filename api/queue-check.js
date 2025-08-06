@@ -1,51 +1,26 @@
+// /api/test-agent.js
+import fetch from 'node-fetch';
+
 export default async function handler(req, res) {
-  // Use dynamic import to avoid ESM issues
-  const fetch = (...args) =>
-    import('node-fetch').then(({ default: fetch }) => fetch(...args));
-
-  const accessToken = process.env.LIVECHAT_ACCESS_TOKEN;
-
-  // Log the start and token snippet
-  console.log("🔄 Starting queue check...");
-  console.log("🔐 Using access token:", accessToken ? accessToken.slice(0, 20) + "..." : "None ❌");
-
-  if (!accessToken) {
-    return res.status(500).json({
-      error: 'Queue check failed',
-      details: 'No access token provided'
-    });
-  }
-
   try {
-    // Call a known public LiveChat endpoint for testing
-    const response = await fetch('https://api.livechatinc.com/v3.3/agents', {
-      method: 'GET',
+    const accessToken = process.env.ACCESS_TOKEN;
+
+    const response = await fetch('https://api.livechatinc.com/v3.5/agents/me', {
       headers: {
-        Authorization: `Bearer ${accessToken}`
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json'
       }
     });
 
-    const contentType = response.headers.get("content-type") || "";
     const text = await response.text();
 
-    if (!contentType.includes("application/json")) {
-      console.error("❌ Non-JSON response:", text);
-      throw new Error(`Non-JSON response: ${text}`);
+    try {
+      const json = JSON.parse(text);
+      res.status(200).json({ message: 'Agent info fetched', data: json });
+    } catch (parseError) {
+      res.status(500).json({ error: 'Non-JSON response', raw: text });
     }
-
-    const data = JSON.parse(text);
-
-    console.log("✅ API call successful:", JSON.stringify(data, null, 2));
-
-    return res.status(200).json({
-      message: "Queue check succeeded",
-      data
-    });
-  } catch (error) {
-    console.error("❌ Queue check error:", error.message);
-    return res.status(500).json({
-      error: "Queue check failed",
-      details: error.message
-    });
+  } catch (err) {
+    res.status(500).json({ error: 'Fetch failed', details: err.message });
   }
 }

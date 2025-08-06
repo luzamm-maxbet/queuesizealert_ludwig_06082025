@@ -1,6 +1,6 @@
 const fetch = require('node-fetch');
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const code = req.query.code;
   const clientId = process.env.LIVECHAT_CLIENT_ID;
   const clientSecret = process.env.LIVECHAT_CLIENT_SECRET;
@@ -33,31 +33,40 @@ export default async function handler(req, res) {
 
     const accessToken = tokenData.access_token;
 
-   // Step 2: Try calling the Agents API v3.4
-const agentResponse = await fetch("https://api.livechatinc.com/v3.4/agents", {
-  headers: {
-    Authorization: `Bearer ${accessToken}`,
-    "Content-Type": "application/json"
+    // Step 2: Fetch something you have access to (agents list)
+    const agentResponse = await fetch("https://api.livechatinc.com/v3.4/agents", {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
+    });
+
+    const raw = await agentResponse.text();
+    console.log("📄 Raw response from /agents:", raw);
+
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      console.error("❌ Failed to parse JSON:", e.message);
+      return res.status(500).json({
+        error: "Callback failed",
+        details: "Could not parse API response as JSON. See logs.",
+        raw_response: raw
+      });
+    }
+
+    return res.status(200).json({
+      message: "Authorization successful!",
+      access_token: accessToken,
+      api_response: data
+    });
+  } catch (error) {
+    console.error("❌ Callback error:", error);
+    return res.status(500).json({
+      error: "Callback failed",
+      details: error.message
+    });
   }
-});
-
-const raw = await agentResponse.text();
-console.log("📄 Raw response from /agents:", raw);
-
-let data;
-try {
-  data = JSON.parse(raw);
-} catch (e) {
-  console.error("❌ Failed to parse JSON:", e.message);
-  return res.status(500).json({
-    error: "Callback failed",
-    details: "Could not parse API response as JSON. See logs.",
-    raw_response: raw
-  });
-}
-
-return res.status(200).json({
-  message: "Authorization successful!",
-  access_token: accessToken,
-  api_response: data
-});
+};

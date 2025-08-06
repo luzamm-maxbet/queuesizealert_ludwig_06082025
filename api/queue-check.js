@@ -1,7 +1,7 @@
-import fetch from 'node-fetch';
-
 export default async function handler(req, res) {
-  const accessToken = process.env.LIVECHAT_ACCESS_TOKEN; // Temporary for testing
+  const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+
+  const accessToken = process.env.LIVECHAT_ACCESS_TOKEN;
 
   if (!accessToken) {
     return res.status(500).json({ error: 'No access token provided' });

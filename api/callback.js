@@ -1,4 +1,4 @@
-import fetch from "node-fetch";
+import fetch from 'node-fetch';
 
 export default async function handler(req, res) {
   const code = req.query.code;
@@ -6,9 +6,12 @@ export default async function handler(req, res) {
   const clientSecret = process.env.LIVECHAT_CLIENT_SECRET;
   const redirectUri = "https://queuesizealert-ludwig-06082025.vercel.app/callback";
 
-  if (!code) return res.status(400).send("Missing code");
+  if (!code) {
+    return res.status(400).send("Missing authorization code.");
+  }
 
   try {
+    // Step 1: Exchange code for access token
     const tokenRes = await fetch("https://accounts.livechat.com/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -28,20 +31,42 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Failed to get access token", details: tokenData });
     }
 
-    // Example API call (optional)
-    const apiRes = await fetch("https://api.livechatinc.com/v3.5/reports/agents", {
-      headers: { Authorization: `Bearer ${tokenData.access_token}` }
+    const accessToken = tokenData.access_token;
+
+    // Step 2: Try calling the Reports API
+    const reportRes = await fetch("https://api.livechatinc.com/v3.5/reports/agents", {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json"
+      }
     });
 
-    const data = await apiRes.json();
+    const raw = await reportRes.text();
+    console.log("📄 Raw response from /reports/agents:", raw);
 
-    res.status(200).json({
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      console.error("❌ Failed to parse JSON:", e.message);
+      return res.status(500).json({
+        error: "Callback failed",
+        details: "Could not parse API response as JSON. See logs.",
+        raw_response: raw
+      });
+    }
+
+    // Success!
+    return res.status(200).json({
       message: "Authorization successful!",
-      access_token: tokenData.access_token,
+      access_token: accessToken,
       api_response: data
     });
   } catch (error) {
     console.error("❌ Callback error:", error);
-    res.status(500).json({ error: "Callback failed", details: error.message });
+    return res.status(500).json({
+      error: "Callback failed",
+      details: error.message
+    });
   }
 }

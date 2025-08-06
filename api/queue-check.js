@@ -3,6 +3,8 @@ export default async function handler(req, res) {
 
   const accessToken = process.env.LIVECHAT_ACCESS_TOKEN;
 
+  console.log("🔐 Using access token:", accessToken?.slice(0, 10) + "...");
+
   if (!accessToken) {
     return res.status(500).json({ error: 'No access token provided' });
   }

@@ -1,89 +1,65 @@
-const fetch = require('node-fetch');
+import fetch from 'node-fetch';
 
-module.exports = async function handler(req, res) {
-  const clientId = process.env.LIVECHAT_CLIENT_ID;
-  const clientSecret = process.env.LIVECHAT_CLIENT_SECRET;
-  const licenseId = process.env.LIVECHAT_LICENSE_ID;
-  const webhookUrl = process.env.TEAMS_WEBHOOK_URL;
-  const threshold = parseInt(process.env.QUEUE_THRESHOLD || "3", 10);
+const CLIENT_ID = process.env.CLIENT_ID;
+const CLIENT_SECRET = process.env.CLIENT_SECRET;
+const TOKEN_URL = 'https://accounts.livechat.com/token';
+const QUEUE_URL = 'https://api.livechatinc.com/v3.5/reports/agents';
 
+export default async function handler(req, res) {
   try {
     // Step 1: Get access token
-    const tokenRes = await fetch("https://accounts.livechat.com/token", {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    const tokenResponse = await fetch(TOKEN_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
       body: new URLSearchParams({
-        grant_type: "client_credentials",
-        client_id: clientId,
-        client_secret: clientSecret
-      })
+        grant_type: 'client_credentials',
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+      }),
     });
 
-    const tokenData = await tokenRes.json();
-    console.log("🔐 Token response:", tokenData);
+    const tokenData = await tokenResponse.json();
 
-    if (!tokenData.access_token) {
-      throw new Error("No access token received");
+    if (!tokenResponse.ok || !tokenData.access_token) {
+      console.error('🔐 Token error:', tokenData);
+      return res.status(500).json({ error: 'Token fetch failed', details: tokenData });
     }
 
     const accessToken = tokenData.access_token;
 
-    // Step 2: Get queue info from chats summary
-    const summaryRes = await fetch(`https://api.livechatinc.com/v3.5/chats/summary?license_id=${licenseId}`, {
-      method: "GET",
+    // Step 2: Fetch agent reports
+    const reportsResponse = await fetch(QUEUE_URL, {
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json"
-      }
+      },
     });
 
-    const raw = await summaryRes.text();
-    console.log("📄 Raw response from chats/summary:", raw);
-
-    let data;
+    const rawText = await reportsResponse.text();
     try {
-      data = JSON.parse(raw);
-    } catch (e) {
-      console.error("❌ Failed to parse JSON:", e.message);
+      const reportData = JSON.parse(rawText);
+
+      // Example: check if total chats in queue > 3
+      const totalChats = reportData.total_chats || 0;
+
+      if (totalChats > 3) {
+        // TODO: Add MS Teams webhook notification here
+        return res.status(200).json({ status: 'ALERT', totalChats });
+      } else {
+        return res.status(200).json({ status: 'OK', totalChats });
+      }
+    } catch (jsonError) {
+      console.error('❌ Failed to parse JSON:', rawText);
       return res.status(500).json({
-        error: "API response not valid JSON",
-        raw_response: raw
+        error: 'Failed to parse response',
+        raw_response: rawText,
       });
     }
 
-    const queued = data?.queued ?? 0;
-    console.log(`👥 Currently queued: ${queued}`);
-
-    // Step 3: Send to Teams if above threshold
-    if (queued >= threshold && webhookUrl) {
-      const message = {
-        "@type": "MessageCard",
-        "@context": "http://schema.org/extensions",
-        summary: "LiveChat Queue Alert",
-        themeColor: "FF0000",
-        title: "🚨 LiveChat Queue Threshold Exceeded",
-        text: `There are currently **${queued}** users in the queue. Threshold is ${threshold}.`
-      };
-
-      await fetch(webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(message)
-      });
-
-      console.log("✅ Teams alert sent.");
-    }
-
-    return res.status(200).json({
-      queued,
-      threshold,
-      notified: queued >= threshold
-    });
-  } catch (error) {
-    console.error("❌ Error:", error);
-    return res.status(500).json({
-      error: "Queue check failed",
-      details: error.message
-    });
+  } catch (err) {
+    console.error('❌ Unexpected error:', err);
+    return res.status(500).json({ error: 'Queue check failed', details: err.message });
   }
-};
+}

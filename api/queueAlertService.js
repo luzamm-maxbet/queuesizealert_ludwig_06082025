@@ -2,6 +2,12 @@ export default async function handler(req, res) {
   const clientId = process.env.LIVECHAT_CLIENT_ID;
   const clientSecret = process.env.LIVECHAT_CLIENT_SECRET;
 
+  console.log("🔐 CLIENT_ID:", clientId);
+  console.log("🔐 CLIENT_SECRET:", clientSecret ? "Exists ✅" : "Missing ❌");
+
+  // The rest of your function...
+}
+
   if (!clientId || !clientSecret) {
     return res.status(500).json({ error: 'Missing environment variables' });
   }

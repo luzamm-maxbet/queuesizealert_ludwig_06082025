@@ -33,8 +33,8 @@ module.exports = async function handler(req, res) {
 
     const accessToken = tokenData.access_token;
 
-    // Step 2: Fetch something you have access to (agents list)
-    const agentResponse = await fetch("https://api.livechatinc.com/v3.4/agents", {
+    // Step 2: Call a safe endpoint to validate token
+    const whoamiRes = await fetch("https://api.livechatinc.com/v3.3/configuration/action/whoami", {
       method: "GET",
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -42,8 +42,8 @@ module.exports = async function handler(req, res) {
       }
     });
 
-    const raw = await agentResponse.text();
-    console.log("📄 Raw response from /agents:", raw);
+    const raw = await whoamiRes.text();
+    console.log("📄 Raw response from whoami:", raw);
 
     let data;
     try {

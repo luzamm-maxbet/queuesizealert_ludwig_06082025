@@ -1,12 +1,13 @@
 {
-  "name": "@livechat/developer-app-template-nextjs",
+  "name": "queue-size-alert",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "build": "next build",
     "dev": "next dev",
-    "lint": "next lint",
-    "start": "next start"
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
   "dependencies": {
     "@livechat/agent-app-sdk": "^1.8.0",
@@ -17,9 +18,9 @@
     "@livechat/moments-sdk": "^1.8.2",
     "camelcase": "^6.3.0",
     "next": "14.2.2",
+    "node-fetch": "^3.3.2",
     "react": "^18",
-    "react-dom": "^18",
-    "node-fetch": "^2.6.7"
+    "react-dom": "^18"
   },
   "devDependencies": {
     "@types/node": "^20",

@@ -1,7 +1,7 @@
 // /api/test-agent.js
-import fetch from 'node-fetch';
-
 export default async function handler(req, res) {
+  const fetch = (await import('node-fetch')).default;
+
   try {
     const accessToken = process.env.ACCESS_TOKEN;
 

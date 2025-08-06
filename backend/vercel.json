@@ -1,8 +1,0 @@
-{
-  "routes": [
-    {
-      "src": "/queueAlertService",
-      "dest": "/backend/index.js"
-    }
-  ]
-}
